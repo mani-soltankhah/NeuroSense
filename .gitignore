@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+Data/raw/
+Data/processed/
+
+*.eeg
+*.edf
+*.fif
+*.mat
+*.png
+*.pth
+.env
+
+.idea/
