@@ -1,3 +1,4 @@
+import h5py
 from torch.utils.data import Dataset
 
 
@@ -12,4 +13,9 @@ class BrainTumorDataset(Dataset):
 
     def __getitem__(self, index):
         row = self.df.iloc[index]
-        return row
+        path = row['path']
+        with h5py.File(path, 'r') as f:
+            cjdata = f['cjdata']
+            image = cjdata['image'][()]
+            tumor_mask = cjdata['tumorMask'][()]
+        return image, tumor_mask
