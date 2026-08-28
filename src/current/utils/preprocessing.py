@@ -1,5 +1,5 @@
 import random
-
+import torch
 import h5py
 import numpy as np
 import pandas as pd
@@ -16,6 +16,15 @@ def normalize_image(image):
     normalized_image = np.zeros_like(image)
     normalized_image[brain_mask] = (image[brain_mask] - mean) / std
     return normalized_image
+
+
+def image_to_tensor(image):
+    tensor_image = torch.tensor(image)
+    return tensor_image
+
+
+def add_channel_dimension(image):
+    return image.unsqueeze(0)
 
 
 data_dir = Path(r"D:\Portfolio\NeuroSense\Data\Raw")
@@ -35,7 +44,15 @@ df = pd.DataFrame(
 dataset = BrainTumorDataset(df)
 image, mask = dataset[0]
 random_files = random.sample(mat_files, 10)
-normalized = normalize_image(image)
+normalized_image = normalize_image(image)
+normalized_tumor = normalized_image[mask == 1]
+normalized_background = normalized_image[mask == 0]
+tensor_image = image_to_tensor(normalized_image)
+tensor_image = add_channel_dimension(tensor_image)
+
+print("Shape:", tensor_image.shape)
+print("Type:", type(tensor_image))
+print("Dtype:", tensor_image.dtype)
 
 for path in random_files:
     with h5py.File(path, "r") as f:
@@ -43,16 +60,29 @@ for path in random_files:
         image = cjdata["image"][()]
         tumor_mask = cjdata['tumorMask'][()]
         normalized_random = normalize_image(image)
-        normalized_brain = normalized_random[normalized_random != 0]
 
+        healthy_brain_mask = (image != 0) & (tumor_mask == 0)
+        normalized_healthy_brain = normalized_random[healthy_brain_mask]
+
+        normalized_image = normalize_image(image)
+        normalized_tumor = normalized_image[tumor_mask == 1]
+        normalized_background = normalized_image[tumor_mask == 0]
+        normalized_brain = normalized_random[normalized_random != 0]
         print(
             f"""
             Whole image:
-            mean: {normalized_random.mean():.2f}
-            std: {normalized_random.std():.2f}
-
-            Brain only:
-            mean: {normalized_brain.mean():.2f}
-            std: {normalized_brain.std():.2f}
+            min: {normalized_random.min():.2f}
+            max: {normalized_random.max():.2f}
             """
         )
+        # print(f"""
+        # name: {path.name}
+        #
+        # Tumor:
+        # mean: {normalized_tumor.mean():.3f}
+        # std: {normalized_tumor.std():.3f}
+        #
+        # Healthy brain:
+        # mean: {normalized_healthy_brain.mean():.3f}
+        # std: {normalized_healthy_brain.std():.3f}
+        # """)
