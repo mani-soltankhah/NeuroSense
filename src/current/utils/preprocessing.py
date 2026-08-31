@@ -36,7 +36,7 @@ class BrainMRIProcessor:
         image = image.unsqueeze(0)
         image = F.interpolate(image, size=size, mode='bilinear', align_corners=False)
         return image.squeeze(0)
-
+    
     def resize_mask(self, image, size):
         image = image.unsqueeze(0)
         image = F.interpolate(image, size=size, mode='nearest')
