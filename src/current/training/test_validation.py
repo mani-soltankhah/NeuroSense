@@ -27,12 +27,13 @@ train_loss = train_one_epoch(
     device
 )
 
-val_loss = validate(
+val_loss, val_dice, val_iou = validate(
     model,
     val_loader,
     criterion,
     device
 )
 
-print("Train Loss:", train_loss)
 print("Validation Loss:", val_loss)
+print("Validation Dice:", val_dice)
+print("Validation IoU:", val_iou)

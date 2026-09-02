@@ -1,18 +1,29 @@
 import torch
+from src.current.models.unet import UNet
+from src.current.training.trainer import Trainer
+from src.current.losses.dice_loss import DiceLoss
+from src.current.datasets.test_dataloader import train_loader, val_loader
 
+device = torch.device(
+    'cuda' if torch.cuda.is_available()
+    else 'cpu'
+)
 
-def train_one_epoch(model, loader, criterion, optimizer, device):
-    model.train()
+model = UNet(in_channels=1, out_channels=1)
+model = model.to(device)
+criterion = DiceLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-    total_loss = 0.0
-    for images, masks in loader:
-        images, masks = images.to(device), masks.to(device)
-        optimizer.zero_grad()
-        predictions = model(images)
-        loss = criterion(predictions, masks)
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
-    average_loss = total_loss / len(loader)
-    
-    return average_loss
+trainer = Trainer(
+    model,
+    train_loader,
+    val_loader,
+    criterion,
+    optimizer,
+    device
+)
+
+epochs = 10
+for epoch in range(epochs):
+    train_loss = trainer.train_one_epoch(epochs)
+    print(f'Epoch {epoch + 1}/{epochs}: \nLoss: {train_loss:.4f}')
