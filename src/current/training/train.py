@@ -23,7 +23,4 @@ trainer = Trainer(
     device
 )
 
-epochs = 10
-for epoch in range(epochs):
-    train_loss = trainer.train_one_epoch(epochs)
-    print(f'Epoch {epoch + 1}/{epochs}: \nLoss: {train_loss:.4f}')
+trainer.fit(epochs=10)
