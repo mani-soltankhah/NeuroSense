@@ -28,19 +28,26 @@ class Trainer:
         total_dice = 0
         total_iou = 0
         for images, masks in self.train_loader:
-            images, masks = images.to(self.device), masks.to(self.device)
+            images = images.to(self.device, non_blocking=True)
+            masks = masks.to(self.device, non_blocking=True)
+
+            self.optimizer.zero_grad()
+
             predictions = self.model(images)
+
             loss = self.criterion(predictions, masks)
+            loss.backward()
+
+            self.optimizer.step()
+
             dice = dice_score(predictions, masks)
             iou = iou_score(predictions, masks)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+
             total_loss += loss.item()
             total_dice += dice.item()
             total_iou += iou.item()
 
-        last_weight = next(self.model.parameters())
+        # last_weight = next(self.model.parameters())
 
         return (
             total_loss / len(self.train_loader),
@@ -53,10 +60,14 @@ class Trainer:
         total_loss = 0
         total_dice = 0
         total_iou = 0
+
         with torch.no_grad():
             for images, masks in self.val_loader:
-                images, masks = images.to(self.device), masks.to(self.device)
+                images = images.to(self.device, non_blocking=True)
+                masks = masks.to(self.device, non_blocking=True)
+
                 predictions = self.model(images)
+
                 loss = self.criterion(predictions, masks)
                 dice = dice_score(predictions, masks)
                 iou = iou_score(predictions, masks)
@@ -74,6 +85,7 @@ class Trainer:
     def fit(self, epochs):
         best_epoch = 0
         best_dice = 0
+
         for epoch in range(epochs):
             train_loss, train_dice, train_iou = self.train_one_epoch()
             val_loss, val_dice, val_iou = self.validate()
@@ -97,6 +109,7 @@ class Trainer:
             if val_dice > best_dice:
                 best_dice = val_dice
                 best_epoch = epoch + 1
+
                 Path(self.checkpoint_path).parent.mkdir(
                     parents=True,
                     exist_ok=True

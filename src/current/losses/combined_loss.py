@@ -41,30 +41,3 @@ class BCEDiceLoss(nn.Module):
                 + self.dice_weight * dice_loss
         )
         return loss
-
-
-import torch
-
-from src.current.models.unet import UNet
-
-model = UNet(
-    in_channels=1,
-    out_channels=1
-)
-
-criterion = BCEDiceLoss()
-
-x = torch.randn(8, 1, 224, 224)
-target = torch.randint(
-    0,
-    2,
-    (8, 1, 224, 224)
-).float()
-
-output = model(x)
-
-loss = criterion(output, target)
-
-print("Output shape:", output.shape)
-print("Target shape:", target.shape)
-print("Loss:", loss)

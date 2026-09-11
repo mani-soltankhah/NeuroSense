@@ -9,6 +9,7 @@ import pandas as pd
 from pathlib import Path
 from torch.utils.data import DataLoader
 from src.current.datasets.brain_tumor import BrainTumorDataset
+from src.current.datasets.processed_brain_tumor import ProcessedBrainTumorDataset
 from src.current.utils.preprocessing import BrainMRIProcessor
 from src.current.utils.visualization import show_sample
 from numpy import *
@@ -67,16 +68,22 @@ test_df = df[df['patient_id'].isin(test_patient_ids)]
 
 processor = BrainMRIProcessor(image_size=(384, 384))
 
-train_dataset = BrainTumorDataset(train_df, processor=processor)
-val_dataset = BrainTumorDataset(val_df, processor=processor)
-test_dataset = BrainTumorDataset(test_df, processor=processor)
+train_dataset = ProcessedBrainTumorDataset(
+    "D:/Portfolio/NeuroSense/Data/Processed/train"
+)
+val_dataset = ProcessedBrainTumorDataset(
+    "D:/Portfolio/NeuroSense/Data/Processed/val"
+)
+test_dataset = ProcessedBrainTumorDataset(
+    "D:/Portfolio/NeuroSense/Data/Processed/test"
+)
 
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True,
-                          num_workers=0, pin_memory=True)
+                          num_workers=4, pin_memory=True, persistent_workers=True)
 val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False,
-                        num_workers=0, pin_memory=True)
+                        num_workers=4, pin_memory=True, persistent_workers=True)
 test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False,
-                         num_workers=0, pin_memory=True)
+                         num_workers=4, pin_memory=True, persistent_workers=True)
 
 # images, masks = next(iter(train_loader))
 # print(images.shape)
