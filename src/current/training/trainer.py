@@ -5,7 +5,7 @@ from pathlib import Path
 
 class Trainer:
     def __init__(self, model, train_loader, val_loader, criterion, optimizer, device,
-                 checkpoint_path="models/best_model.pth"):
+                 checkpoint_path="models/best_model.pth", patience=10):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -13,6 +13,7 @@ class Trainer:
         self.optimizer = optimizer
         self.device = device
         self.checkpoint_path = checkpoint_path
+        self.patience = patience
         self.history = {
             "train_loss": [],
             "train_dice": [],
@@ -85,7 +86,7 @@ class Trainer:
     def fit(self, epochs):
         best_epoch = 0
         best_dice = 0
-
+        patience_counter = 0
         for epoch in range(epochs):
             train_loss, train_dice, train_iou = self.train_one_epoch()
             val_loss, val_dice, val_iou = self.validate()
@@ -109,6 +110,7 @@ class Trainer:
             if val_dice > best_dice:
                 best_dice = val_dice
                 best_epoch = epoch + 1
+                patience_counter = 0
 
                 Path(self.checkpoint_path).parent.mkdir(
                     parents=True,
@@ -127,4 +129,10 @@ class Trainer:
                     f"Best model saved at epoch {best_epoch} "
                     f"with Dice {best_dice:.4f}"
                 )
+            else:
+                patience_counter += 1
+                print(f"No improvement: {patience_counter}/{self.patience}")
+                if patience_counter >= self.patience:
+                    print(f"Early stopping at epoch {epoch + 1}")
+                    break
         return self.history
