@@ -15,9 +15,12 @@ def main():
     model = model.to(device)
 
     criterion = BCEDiceLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-4)
-
-    trainer = Trainer(model, train_loader, val_loader, criterion, optimizer, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4,
+                                 weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max",
+                                                           factor=0.5, patience=5)
+    trainer = Trainer(model, train_loader, val_loader,
+                      criterion, optimizer, device, scheduler=scheduler)
     trainer.fit(epochs=50)
 
 

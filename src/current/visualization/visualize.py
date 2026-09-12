@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from src.current.metrics.segmentation import dice_score, iou_score
+from src.current.utils.metrics import dice_score, iou_score
 
 matplotlib.use('TkAgg')
 
@@ -70,6 +70,80 @@ def create_segmentation_figure(image, mask, prediction, dice, iou):
     return fig
 
 
+def create_probability_figure(image, mask, probability, prediction, dice, iou):
+    image = tensor_to_numpy(image)
+    mask = tensor_to_numpy(mask)
+    probability = tensor_to_numpy(probability)
+    prediction = tensor_to_numpy(prediction)
+
+    image_norm = normalize_image(image)
+
+    fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+
+    # 1. MRI
+    axes[0].imshow(image_norm, cmap='gray')
+    axes[0].set_title('Original MRI')
+    axes[0].axis('off')
+
+    # 2. Ground Truth
+    axes[1].imshow(image_norm, cmap='gray')
+
+    masked_gt = np.ma.masked_where(mask == 0, mask)
+
+    axes[1].imshow(
+        masked_gt,
+        cmap='Reds',
+        alpha=0.6,
+        interpolation='none'
+    )
+
+    axes[1].set_title('Ground Truth')
+    axes[1].axis('off')
+
+    # 3. Probability Map
+    im = axes[2].imshow(
+        probability,
+        cmap='jet',
+        vmin=0,
+        vmax=1
+    )
+
+    axes[2].set_title('Probability Map')
+    axes[2].axis('off')
+
+    fig.colorbar(
+        im,
+        ax=axes[2],
+        fraction=0.046,
+        pad=0.04
+    )
+
+    # 4. Binary Prediction
+    axes[3].imshow(image_norm, cmap='gray')
+
+    masked_pred = np.ma.masked_where(
+        prediction == 0,
+        prediction
+    )
+
+    axes[3].imshow(
+        masked_pred,
+        cmap='Blues',
+        alpha=0.6,
+        interpolation='none'
+    )
+
+    axes[3].set_title(
+        f'Prediction\nDice: {dice:.3f} | IoU: {iou:.3f}'
+    )
+
+    axes[3].axis('off')
+
+    plt.tight_layout()
+
+    return fig
+
+
 def show_segmentation(image, mask, prediction):
     dice = dice_score(prediction, mask)
     iou = iou_score(prediction, mask)
@@ -99,18 +173,39 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
     results = []
     counts = {"Excellent": 0, "Good": 0, "Fair": 0, "Poor": 0, "Very Poor": 0}
     for images, masks in loader:
-        predictions = predictor.predict(images)
+        probabilities, predictions = predictor.predict(images)
+        probabilities = probabilities.cpu()
         predictions = predictions.cpu()
         for i in range(images.size(0)):
+            if current_idx == 411:
+                probability = probabilities[0]
 
+                print("\n===== PROBABILITY DEBUG =====")
+                print("shape:", probability.shape)
+                print("min:", probability.min().item())
+                print("max:", probability.max().item())
+                print("mean:", probability.mean().item())
+
+                print("unique values:", torch.unique(probability)[:20])
+
+                print("percentiles:")
+                print("p01:", torch.quantile(probability, 0.01).item())
+                print("p10:", torch.quantile(probability, 0.10).item())
+                print("p25:", torch.quantile(probability, 0.25).item())
+                print("p50:", torch.quantile(probability, 0.50).item())
+                print("p75:", torch.quantile(probability, 0.75).item())
+                print("p90:", torch.quantile(probability, 0.90).item())
+                print("p99:", torch.quantile(probability, 0.99).item())
+                print("=============================\n")
             if current_idx >= start_idx:
                 dice = dice_score(predictions[i], masks[i])
                 iou = iou_score(predictions[i], masks[i])
                 all_dice += dice
                 all_iou += iou
-                fig = create_segmentation_figure(
+                fig = create_probability_figure(
                     images[i],
                     masks[i],
+                    probabilities[i],
                     predictions[i],
                     dice,
                     iou
@@ -120,7 +215,7 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
 
                 filename = f"sample_{sample_index:04d}.png"
                 category_dir = output_dir / category.lower().replace(" ", "_")
-                category_dir.mkdir(exist_ok=True)
+                category_dir.mkdir(parents=True, exist_ok=True)
                 filepath = category_dir / filename
 
                 save_segmentation(fig, filepath)

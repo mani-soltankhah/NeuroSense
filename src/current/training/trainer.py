@@ -5,7 +5,7 @@ from pathlib import Path
 
 class Trainer:
     def __init__(self, model, train_loader, val_loader, criterion, optimizer, device,
-                 checkpoint_path="models/best_model.pth", patience=10):
+                 checkpoint_path="models/best_model.pth", patience=10, scheduler=None):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -14,6 +14,7 @@ class Trainer:
         self.device = device
         self.checkpoint_path = checkpoint_path
         self.patience = patience
+        self.scheduler = scheduler
         self.history = {
             "train_loss": [],
             "train_dice": [],
@@ -90,6 +91,8 @@ class Trainer:
         for epoch in range(epochs):
             train_loss, train_dice, train_iou = self.train_one_epoch()
             val_loss, val_dice, val_iou = self.validate()
+            if self.scheduler is not None:
+                self.scheduler.step(val_dice)
 
             self.history["train_loss"].append(train_loss)
             self.history["train_dice"].append(train_dice)

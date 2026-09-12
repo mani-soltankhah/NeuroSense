@@ -12,6 +12,6 @@ class Predictor:
 
         with torch.no_grad():
             output = self.model(image)
-            prediction = torch.sigmoid(output)
-            prediction = (prediction > 0.5).float()
-        return prediction
+            probability = torch.sigmoid(output)
+            prediction = (probability > 0.5).float()
+        return probability, prediction
