@@ -25,7 +25,7 @@ def normalize_image(image):
 
 
 def categorize_dice(dice):
-    if dice >= 0.88:
+    if dice >= 0.90:
         return "Excellent"
     elif dice >= 0.80:
         return "Good"
@@ -177,34 +177,24 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
         probabilities = probabilities.cpu()
         predictions = predictions.cpu()
         for i in range(images.size(0)):
-            if current_idx == 411:
-                probability = probabilities[0]
-
-                print("\n===== PROBABILITY DEBUG =====")
-                print("shape:", probability.shape)
-                print("min:", probability.min().item())
-                print("max:", probability.max().item())
-                print("mean:", probability.mean().item())
-
-                print("unique values:", torch.unique(probability)[:20])
-
-                print("percentiles:")
-                print("p01:", torch.quantile(probability, 0.01).item())
-                print("p10:", torch.quantile(probability, 0.10).item())
-                print("p25:", torch.quantile(probability, 0.25).item())
-                print("p50:", torch.quantile(probability, 0.50).item())
-                print("p75:", torch.quantile(probability, 0.75).item())
-                print("p90:", torch.quantile(probability, 0.90).item())
-                print("p99:", torch.quantile(probability, 0.99).item())
-                print("=============================\n")
             if current_idx >= start_idx:
-                dice = dice_score(predictions[i], masks[i])
-                iou = iou_score(predictions[i], masks[i])
-                all_dice += dice
-                all_iou += iou
+                mask = masks[i]
+
+                if mask.ndim == 3:
+                    mask = mask.squeeze(0)
+
+                pred = predictions[i]
+
+                if pred.ndim == 3:
+                    pred = pred.squeeze(0)
+
+                dice = dice_score(pred, mask)
+                iou = iou_score(pred, mask)
+                all_dice += dice.item()
+                all_iou += iou.item()
                 fig = create_probability_figure(
                     images[i],
-                    masks[i],
+                    mask,
                     probabilities[i],
                     predictions[i],
                     dice,

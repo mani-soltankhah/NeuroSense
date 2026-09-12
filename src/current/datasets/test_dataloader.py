@@ -78,12 +78,12 @@ test_dataset = ProcessedBrainTumorDataset(
     "D:/Portfolio/NeuroSense/Data/Processed/test"
 )
 
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True,
-                          num_workers=4, pin_memory=True, persistent_workers=True)
-val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False,
-                        num_workers=4, pin_memory=True, persistent_workers=True)
-test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False,
-                         num_workers=4, pin_memory=True, persistent_workers=True)
+# train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True,
+#                           num_workers=4, pin_memory=True, persistent_workers=True)
+# val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False,
+#                         num_workers=4, pin_memory=True, persistent_workers=True)
+# test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False,
+#                          num_workers=4, pin_memory=True, persistent_workers=True)
 
 # images, masks = next(iter(train_loader))
 # print(images.shape)

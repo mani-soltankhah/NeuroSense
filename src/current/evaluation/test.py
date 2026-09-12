@@ -21,7 +21,7 @@ def main():
     predictor = Predictor(model, device)
     visualize_dataset(test_loader, predictor,
                       "D:/Portfolio/NeuroSense/src/current/evaluation/results",
-                      num_last_images=10
+                      num_last_images=None
                       )
 
 

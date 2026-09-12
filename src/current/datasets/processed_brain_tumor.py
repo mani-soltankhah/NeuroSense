@@ -11,8 +11,8 @@ class ProcessedBrainTumorDataset(Dataset):
         self.image_dir = self.data_dir / 'images'
         self.mask_dir = self.data_dir / 'masks'
 
-        self.images = sorted(self.image_dir.glob("*.pt"))
-        self.masks = sorted(self.mask_dir.glob("*.pt"))
+        self.images = sorted(self.image_dir.glob("*.pt"), key=lambda x: int(x.stem))
+        self.masks = sorted(self.mask_dir.glob("*.pt"), key=lambda x: int(x.stem))
 
     def __len__(self):
         return len(self.images)
