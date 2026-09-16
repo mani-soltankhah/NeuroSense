@@ -20,7 +20,8 @@ def main():
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max",
                                                            factor=0.5, patience=5)
     trainer = Trainer(model, train_loader, val_loader,
-                      criterion, optimizer, device, scheduler=scheduler)
+                      criterion, optimizer, device, scheduler=scheduler,
+                      checkpoint_path="models/flip_model.pth")
     trainer.fit(epochs=50)
 
 

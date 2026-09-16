@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from sklearn.model_selection import train_test_split
 import h5py
 import pandas as pd
@@ -81,3 +82,4 @@ if __name__ == "__main__":
 
     print(images.shape)
     print(masks.shape)
+    print(masks.unique())

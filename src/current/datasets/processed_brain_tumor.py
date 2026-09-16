@@ -1,4 +1,7 @@
 from torch.utils.data import Dataset
+import torchvision.transforms.functional as TF
+from torchvision.transforms import v2
+import albumentations as A
 from pathlib import Path
 import torch
 import random
@@ -14,6 +17,12 @@ class ProcessedBrainTumorDataset(Dataset):
         self.images = sorted(self.image_dir.glob("*.pt"), key=lambda x: int(x.stem))
         self.masks = sorted(self.mask_dir.glob("*.pt"), key=lambda x: int(x.stem))
 
+        if self.augment:
+            self.transform = v2.Compose([
+                # v2.RandomRotation(degrees=15),
+                v2.RandomHorizontalFlip(p=0.5),
+            ])
+
     def __len__(self):
         return len(self.images)
 
@@ -24,8 +33,14 @@ class ProcessedBrainTumorDataset(Dataset):
         image = torch.load(image_path)
         mask = torch.load(mask_path)
         if self.augment:
-            if random.random() > 0.5:
-                image = torch.flip(image, [2])
-                mask = torch.flip(mask, [2])
+            image, mask = self.transform(image, mask)
+
+            # if random.random() > 0.5:
+            #     image = torch.flip(image, [2])
+            #     mask = torch.flip(mask, [2])
+            # if random.random() > 0.5:
+            #     angle = random.choice([-15, -10, 10, 15])
+            #     image = TF.rotate(image, angle, interpolation=TF.InterpolationMode.BILINEAR)
+            #     mask = TF.rotate(image, angle, interpolation=TF.InterpolationMode.NEAREST)
 
         return image, mask
