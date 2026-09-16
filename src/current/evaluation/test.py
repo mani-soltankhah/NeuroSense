@@ -1,4 +1,7 @@
 import torch
+
+from src.current.evaluation.find_best_threshold import test_multiple_thresholds
+from src.current.evaluation.visualize import SegmentationVisualizer
 from src.current.models.unet import UNet
 from src.current.datasets.dataloader import test_loader
 from src.current.utils.metrics import dice_score, iou_score
@@ -15,14 +18,24 @@ def main():
     model = UNet(in_channels=1, out_channels=1)
     model = model.to(device)
 
-    checkpoint = torch.load(r"D:\Portfolio\NeuroSense\src\current\training\models\best_model.pth", map_location=device)
+    checkpoint = torch.load(r"D:\Portfolio\NeuroSense\src\current\training\models\Albumentations_hflip_aug_model.pth",
+                            map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
-    predictor = Predictor(model, device)
-    visualize_dataset(test_loader, predictor,
-                      "D:/Portfolio/NeuroSense/src/current/evaluation/results",
-                      num_last_images=None
-                      )
+    best_threshold, all_results = test_multiple_thresholds(model, test_loader, device)
+    predictor = Predictor(model, device, threshold=best_threshold)
+    # visualize_dataset(test_loader, predictor,
+    #                   "D:/Portfolio/NeuroSense/src/current/evaluation/results",
+    #                   num_last_images=50
+    #                   )
+    visualizer = SegmentationVisualizer(
+        model,
+        test_loader,
+        device,
+        threshold=0.1,
+        save_dir="results/visualization"
+    )
+    visualizer.run()
 
 
 if __name__ == '__main__':

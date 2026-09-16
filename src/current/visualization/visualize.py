@@ -172,10 +172,12 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
     all_iou = 0
     results = []
     counts = {"Excellent": 0, "Good": 0, "Fair": 0, "Poor": 0, "Very Poor": 0}
+
     for images, masks in loader:
         probabilities, predictions = predictor.predict(images)
         probabilities = probabilities.cpu()
         predictions = predictions.cpu()
+
         for i in range(images.size(0)):
             if current_idx >= start_idx:
                 mask = masks[i]
@@ -192,6 +194,7 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
                 iou = iou_score(pred, mask)
                 all_dice += dice.item()
                 all_iou += iou.item()
+
                 fig = create_probability_figure(
                     images[i],
                     mask,
@@ -200,22 +203,31 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
                     dice,
                     iou
                 )
+
                 category = categorize_dice(dice)
                 counts[category] += 1
 
-                filename = f"sample_{sample_index:04d}.png"
+                # گرفتن نام فایل اصلی از دیتاست
+                image_path = loader.dataset.images[current_idx]
+                image_name = Path(image_path).stem
+
+                # استفاده از نام فایل اصلی به جای ایندکس
+                filename = f"{image_name}.png"
                 category_dir = output_dir / category.lower().replace(" ", "_")
                 category_dir.mkdir(parents=True, exist_ok=True)
                 filepath = category_dir / filename
 
                 save_segmentation(fig, filepath)
                 sample_index += 1
+
                 print(f'''
-                sample {sample_index:04d} done
+                sample {sample_index:04d} ({image_name}) done
                 dice: {dice:.3f}
                 iou: {iou:.3f}
                 ''')
+
                 results.append({
+                    "filename": image_name,
                     "index": current_idx,
                     "dice": dice.item(),
                     "iou": iou.item(),
@@ -224,6 +236,7 @@ def visualize_dataset(loader, predictor, output_dir, num_last_images=None):
                 })
 
             current_idx += 1
+
     print(f"Average dice: {all_dice / sample_index:.3f}")
     print(f"Average iou: {all_iou / sample_index:.3f}")
     print(f"{sample_index} images have been saved to {output_dir}")
