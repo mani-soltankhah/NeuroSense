@@ -20,6 +20,8 @@ class ProcessedBrainTumorDataset(Dataset):
         if self.augment:
             self.transform = A.Compose([
                 A.HorizontalFlip(p=0.5),
+                A.Rotate(limit=15, p=0.3),
+                A.RandomBrightnessContrast(brightness_limit=0.1, contrast_limit=0.1, p=0.3),
             ], additional_targets={'mask': 'mask'})
 
     def __len__(self):
@@ -65,7 +67,7 @@ class ProcessedBrainTumorDataset(Dataset):
             else:
                 mask = torch.from_numpy(mask_aug).permute(2, 0, 1)
 
-                
+
         else:
             if image.dim() == 2:
                 image = image.unsqueeze(0)

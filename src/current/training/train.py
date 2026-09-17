@@ -2,9 +2,11 @@ import torch
 from torch.optim import AdamW
 from src.current.models.unet import UNet
 from src.current.training.trainer import Trainer
+from src.current.losses.dice_loss import DiceLoss
 from src.current.losses.combined_loss import BCEDiceLoss
 from src.current.datasets.dataloader import train_loader, val_loader
 from src.current.losses.focal_tversky import FocalTverskyLoss
+from src.current.losses.hybrid_loss import DiceFocalTverskyLoss
 
 
 def main():
@@ -16,7 +18,7 @@ def main():
     model = UNet(in_channels=1, out_channels=1)
     model = model.to(device)
 
-    criterion = FocalTverskyLoss(alpha=0.3, beta=0.7, gamma=0.75)
+    criterion = DiceFocalTverskyLoss()
     optimizer = AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="max",
                                                            factor=0.5, patience=5)

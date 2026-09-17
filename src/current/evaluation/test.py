@@ -24,18 +24,18 @@ def main():
     model.eval()
     best_threshold, all_results = test_multiple_thresholds(model, test_loader, device)
     predictor = Predictor(model, device, threshold=best_threshold)
-    # visualize_dataset(test_loader, predictor,
-    #                   "D:/Portfolio/NeuroSense/src/current/evaluation/results",
-    #                   num_last_images=50
-    #                   )
-    visualizer = SegmentationVisualizer(
-        model,
-        test_loader,
-        device,
-        threshold=0.1,
-        save_dir="results/visualization"
-    )
-    visualizer.run()
+    visualize_dataset(test_loader, predictor,
+                      "D:/Portfolio/NeuroSense/src/current/evaluation/results",
+                      # num_last_images=50
+                      )
+    # visualizer = SegmentationVisualizer(
+    #     model,
+    #     test_loader,
+    #     device,
+    #     threshold=0.1,
+    #     save_dir="results/visualization"
+    # )
+    # visualizer.run()
 
 
 if __name__ == '__main__':
