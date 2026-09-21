@@ -1,5 +1,5 @@
 import torch.nn as nn
-from src.current.losses.focal_tversky import FocalTverskyLoss
+from src.current.losses.focal_tversky_2 import FocalTverskyLoss
 from src.current.losses.dice_loss import DiceLoss
 
 

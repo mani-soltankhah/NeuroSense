@@ -1,31 +1,33 @@
 import torch
 
 
-def dice_score(predictions, target, threshold=0.5, smooth=1.0):
-    predictions = torch.sigmoid(predictions)
-    predictions = (predictions > threshold).float()
+def dice_score(predictions, targets, smooth=1e-6):
+    """Dice coefficient - works on both probabilities and binary"""
+    # If predictions are logits (raw model output), apply sigmoid
+    # If predictions are already binary, skip sigmoid
+    if predictions.max() > 1.0 or predictions.min() < 0:
+        # Logits detected, apply sigmoid
+        predictions = torch.sigmoid(predictions)
 
-    dice_scores = []
-    for pred, mask in zip(predictions, target):
-        pred = pred.view(-1)
-        mask = mask.view(-1)
-        intersection = (pred * mask).sum()
-        dice = (2 * intersection + smooth) / (pred.sum() + mask.sum() + smooth)
-        dice_scores.append(dice)
+    predictions_flat = predictions.flatten(1)
+    targets_flat = targets.flatten(1)
 
-    return torch.mean(torch.stack(dice_scores))
+    intersection = (predictions_flat * targets_flat).sum(dim=1)
+    dice = (2 * intersection + smooth) / (
+            predictions_flat.sum(dim=1) + targets_flat.sum(dim=1) + smooth
+    )
+    return dice.mean()
 
 
-def iou_score(predictions, target, threshold=0.5, smooth=1.0):
-    predictions = torch.sigmoid(predictions)
-    predictions = (predictions > threshold).float()
+def iou_score(predictions, targets, smooth=1.0):
+    """IoU coefficient"""
+    if predictions.max() > 1.0 or predictions.min() < 0:
+        predictions = torch.sigmoid(predictions)
 
-    iou_scores = []
-    for pred, mask in zip(predictions, target):
-        pred = pred.view(-1)
-        mask = mask.view(-1)
-        intersection = (pred * mask).sum()
-        union = (mask.sum() + pred.sum() - intersection)
-        iou = ((intersection + smooth) / (union + smooth))
-        iou_scores.append(iou)
-    return torch.mean(torch.stack(iou_scores))
+    predictions_flat = predictions.flatten(1)
+    targets_flat = targets.flatten(1)
+
+    intersection = (predictions_flat * targets_flat).sum(dim=1)
+    union = (predictions_flat.sum(dim=1) + targets_flat.sum(dim=1) - intersection)
+    iou = (intersection + smooth) / (union + smooth)
+    return iou.mean()
